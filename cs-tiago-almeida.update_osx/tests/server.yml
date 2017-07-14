@@ -1,0 +1,9 @@
+---
+- name: Install Server
+  hosts: itau
+  gather_facts: no
+  become_user: root
+
+  roles:
+    - rbenv
+    - update

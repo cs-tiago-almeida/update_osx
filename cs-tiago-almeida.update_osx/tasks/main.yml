@@ -1,0 +1,46 @@
+---
+- name: Ensure MAS is installed.(Mac App Store script)
+  homebrew: name=mas state=present
+
+- name: Get MAS account status
+  shell: '/usr/local/bin/mas account'
+  register: mas_account_result
+  failed_when: mas_account_result.rc > 1
+  changed_when: false
+
+- name: Sign in to MAS when email and password are provided.
+  shell: '/usr/local/bin/mas signin "{{ mas_email }}" "{{ mas_password }}"'
+  register: mas_signin_result
+  when: mas_account_result.rc == 1 and mas_email != '' and mas_password != '' and not mas_signin_dialog
+
+- name: Fazendo Login no MAS, and complete password and 2FA using dialog.
+  shell: '/usr/local/bin/mas signin "{{ mas_email }}" "{{ mas_password }}" --dialog'
+  register: mas_signin_result
+  when: mas_signin_dialog and mas_account_result.rc == 1 and mas_email != ''
+
+- name: List installed MAS apps.
+  command: /usr/local/bin/mas list
+  register: mas_list
+  check_mode: no
+  changed_when: false
+
+- name: Ensure configured MAS apps are installed.
+  command: /usr/local/bin/mas install "{{ item.id|default(item) }}"
+  with_items: "{{ mas_installed_apps + mas_installed_app_ids }}"
+  when: "'{{ item.id|default(item) }}' not in mas_list.stdout"
+
+- name: Upgrade apps.
+  command: /usr/local/bin/mas upgrade "{{ item.id|default(item) }}"
+  when: "('1127487414' in  mas_list ) or ('497799835' in  mas_list )"
+
+- name: List available OSX software updates.
+  shell: sudo softwareupdate --list
+  register: installed_applications
+  ignore_errors: true
+
+- name: Apply pending updates.
+  shell: sudo softwareupdate --install {{installed_applications}}
+  with_items: "{{installed_applications.stdout_lines}}"
+  when: "('Command Line Tools' in  installed_applications )"
+
+- debug: msg="{{installed_applications.stdout_lines}}"
