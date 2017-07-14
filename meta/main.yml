@@ -1,12 +1,18 @@
 ---
+
 galaxy_info:
-  author: Tiago de Almeida
-  description: An Ansible role to install rbenv and update OSX
-  license:
-  min_ansible_version: 2.2.1
+  author: cs-tiago-almeida
+  description: Configure Xcode, MacOS and Command Line Tools
+  license: MIT
+  min_ansible_version: 2.0
   platforms:
-  - name: Darwin
-    versions:
-    - all
-  categories:
-  - development
+    - name: GenericBSD
+      versions:
+        - all
+        - any
+  galaxy_tags:
+    - development
+    - osx
+    - xcode
+
+dependencies: []
